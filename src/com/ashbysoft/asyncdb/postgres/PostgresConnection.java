@@ -2,7 +2,7 @@ package com.ashbysoft.asyncdb.postgres;
 
 import com.ashbysoft.asyncdb.Connection;
 import com.ashbysoft.asyncdb.ResultSet;
-import com.ashbysoft.asyncdb.postgres.messages.Query;
+import com.ashbysoft.asyncdb.postgres.messages.*;
 
 import java.nio.channels.AsynchronousSocketChannel;
 import java.util.HashMap;
@@ -27,7 +27,35 @@ public class PostgresConnection implements Connection {
                 return;
             }
 
-            // Row description, datarow datarow datarow.
+            handleQueryResponse(postgresMessage, resultsHandler);
+        });
+    }
+
+    private void handleQueryResponse(PostgresMessage postgresMessage, BiConsumer<Throwable, ResultSet> resultsHandler) {
+        if (postgresMessage instanceof RowDescription) {
+            handleRowDescription((RowDescription)postgresMessage, resultsHandler);
+        } else if (postgresMessage instanceof CommandComplete) {
+            resultsHandler.accept(null, null);
+        } else if (postgresMessage instanceof DataRow) {
+            DataRow dataRow = (DataRow) postgresMessage;
+            handleDataRow(dataRow, resultsHandler);
+        } else if (postgresMessage instanceof ErrorResponse) {
+            ErrorResponse errorResponse = (ErrorResponse) postgresMessage;
+            resultsHandler.accept(errorResponse.toException(), null);
+        }
+    }
+
+    private void handleDataRow(DataRow dataRow, BiConsumer<Throwable, ResultSet> resultsHandler) {
+        System.out.println("Got a data row!");
+        PostgresMessage.receive(sc, (throwable, postgresMessage1) -> {
+            handleQueryResponse(postgresMessage1, resultsHandler);
+        });
+    }
+
+    private void handleRowDescription(RowDescription postgresMessage, BiConsumer<Throwable, ResultSet> resultsHandler) {
+        System.out.println("Got a row description!");
+        PostgresMessage.receive(sc, (throwable, postgresMessage1) -> {
+            handleQueryResponse(postgresMessage1, resultsHandler);
         });
     }
 

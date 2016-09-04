@@ -14,7 +14,11 @@ public class TestMain {
                     return;
                 }
                 System.out.println(String.valueOf(connection));
-                cdl.countDown();
+
+                connection.execQuery("SELECT * FROM routes LIMIT 1;", (throwable, resultSet) -> {
+                    System.out.println("Query completed");
+                    cdl.countDown();
+                });
             });
             cdl.await();
         } catch (InterruptedException e) {

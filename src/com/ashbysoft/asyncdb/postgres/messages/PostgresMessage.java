@@ -83,6 +83,12 @@ public abstract class PostgresMessage {
                 return new BackendKeyData();
             case ReadyForQuery.IDENTIFIER:
                 return new ReadyForQuery();
+            case RowDescription.IDENTIFIER:
+                return new RowDescription();
+            case CommandComplete.IDENTIFIER:
+                return new CommandComplete();
+            case DataRow.IDENTIFIER:
+                return new DataRow();
             default:
                 throw new RuntimeException("Unexpected identifier [" + responseIdentifier + "]");
         }
