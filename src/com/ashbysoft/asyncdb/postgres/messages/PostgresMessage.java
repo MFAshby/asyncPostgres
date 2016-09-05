@@ -1,7 +1,11 @@
 package com.ashbysoft.asyncdb.postgres.messages;
 
+import com.ashbysoft.asyncdb.postgres.PostgresDriver;
+
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
+import java.nio.channels.Channels;
 import java.util.function.BiConsumer;
 
 import static com.ashbysoft.asyncdb.postgres.DefaultCompletionHandler.handle;
@@ -41,7 +45,25 @@ public abstract class PostgresMessage {
         byteBuffer.putInt(getLength() + 4); //Length includes itself.
         writePayloadToBuffer(byteBuffer);
         byteBuffer.flip();
+
+        if (PostgresDriver.DEBUG) {
+            debugLogBuffer("Sending", byteBuffer);
+        }
+
         return byteBuffer;
+    }
+
+    private static void debugLogBuffer(String title, ByteBuffer byteBuffer) {
+        try {
+            System.out.print(title);
+            System.out.print(": [");
+            byte[] b = new byte[byteBuffer.remaining()];
+            byteBuffer.get(b);
+            System.out.println(new String(b));
+            System.out.println("]\n");
+        } finally {
+            byteBuffer.position(0);
+        }
     }
 
     public static void receive(AsynchronousSocketChannel sc, BiConsumer<Throwable, PostgresMessage> handler) {
@@ -53,6 +75,10 @@ public abstract class PostgresMessage {
             }
 
             headerBuffer.position(0);
+
+            if (PostgresDriver.DEBUG) {
+                debugLogBuffer("Received Header: ", headerBuffer);
+            }
             char responseIdentifier = (char)headerBuffer.get();
             int responseLength = headerBuffer.getInt() - 4; // length includes length integer but not the identifier.
             ByteBuffer payloadBuffer = ByteBuffer.allocateDirect(responseLength);
@@ -62,10 +88,14 @@ public abstract class PostgresMessage {
                     return;
                 }
                 payloadBuffer.position(0);
+                if (PostgresDriver.DEBUG) {
+                    debugLogBuffer("Received Payload: ", payloadBuffer);
+                }
 
                 PostgresMessage responseMessage = PostgresMessage.factoryForIdentifier(responseIdentifier);
                 assert responseMessage != null;
                 responseMessage.readPayloadFromBuffer(payloadBuffer);
+
                 handler.accept(null, responseMessage);
             }));
         }));

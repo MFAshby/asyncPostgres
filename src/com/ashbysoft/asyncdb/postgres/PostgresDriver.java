@@ -16,6 +16,7 @@ import static com.ashbysoft.asyncdb.postgres.PostgresUtils.asciiBytes;
 import static com.ashbysoft.asyncdb.postgres.PostgresUtils.encodeMd5Password;
 
 public class PostgresDriver implements Driver {
+    public static final boolean DEBUG = true;
     @Override
     public void connect(String host, int port, String database, String username, String password,
                         BiConsumer<Connection, Throwable> connectedHandler) {

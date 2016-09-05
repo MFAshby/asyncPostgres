@@ -46,6 +46,21 @@ public class PostgresUtils {
         }
     }
 
+    public static String bytesToHexString(byte[] bytes) {
+        byte[] hex = new byte[bytes.length * 2];
+        final char lookup[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                'a', 'b', 'c', 'd', 'e', 'f' };
+        int i, c, j, pos = 0;
+        for (i = 0; i < bytes.length; i++) {
+            c = bytes[i] & 0xFF;
+            j = c >> 4;
+            hex[pos++] = (byte) lookup[j];
+            j = (c & 0xF);
+            hex[pos++] = (byte) lookup[j];
+        }
+        return new String(hex, Charset.forName("ASCII"));
+    }
+
     public static byte[] asciiBytesWithNull(String s) {
         byte[] asciis = asciiBytes(s);
         return Arrays.copyOf(asciis, asciis.length + 1);
@@ -64,4 +79,6 @@ public class PostgresUtils {
         }
         return sb.toString();
     }
+
+
 }

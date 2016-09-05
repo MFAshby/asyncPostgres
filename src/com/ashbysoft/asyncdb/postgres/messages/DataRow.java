@@ -1,5 +1,7 @@
 package com.ashbysoft.asyncdb.postgres.messages;
 
+import com.ashbysoft.asyncdb.postgres.ColumnData;
+
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
@@ -27,22 +29,6 @@ public class DataRow extends PostgresMessage {
         short numColumns = payloadBuffer.getShort();
         for (int i = 0; i < numColumns; i++) {
             columnDatas.add(ColumnData.read(payloadBuffer));
-        }
-    }
-
-    public static class ColumnData {
-        private int length;
-        private byte[] data;
-
-        public static ColumnData read(ByteBuffer bb) {
-            ColumnData columnData = new ColumnData();
-            columnData.length = bb.getInt();
-            // -1 indicates NULL column value
-            if (columnData.length > -1) {
-                columnData.data = new byte[columnData.length];
-                bb.get(columnData.data);
-            }
-            return columnData;
         }
     }
 
